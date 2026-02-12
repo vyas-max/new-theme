@@ -452,148 +452,153 @@
 
 <div
   id="Hero-{{ section.id }}"
-  class="hero color-{{ section.settings.color_scheme }}{% if section.blocks.size == 0 and section.settings.section_height == 'auto' %} hero--no-blocks-auto-height{% endif %}{% if section.settings.stack_media_on_mobile %} hero--stack-mobile{% endif %}"
+  class="hero cinematic-hero color-{{ section.settings.color_scheme }}"
   style="
-    --hero-border-style: {{ section.settings.border }};
-    --hero-border-width: {{ section.settings.border_width }}px;
-    --hero-border-opacity: {{ section.settings.border_opacity }}%;
-    --blur-opacity: {{ section.settings.reflection_opacity | divided_by: 100.0 }};
-    {% if section.settings.section_height == 'custom' %}
-      --hero-min-height: {{ section.settings.section_height_custom }}svh;
-    {% elsif section.settings.section_height == "full-screen" %}
-       --hero-min-height: 100svh;
-    {% else %}
-      --hero-min-height: var(--section-height-{{ section.settings.section_height }});
-    {% endif %}
+    --hero-min-height: {% if section.settings.section_height == 'custom' %}{{ section.settings.section_height_custom }}svh{% elsif section.settings.section_height == 'full-screen' %}100svh{% else %}var(--section-height-{{ section.settings.section_height }}){% endif %};
   "
-  {% if request.visual_preview_mode %}
-    data-shopify-visual-preview
-  {% endif %}
-  {% if section.settings.blurred_reflection and has_only_video == false or has_only_video_mobile == false %}
-    data-blur-shadow="true"
-  {% endif %}
 >
-  {% if section.settings.blurred_reflection %}
-    {% unless has_only_video %}
-      <div
-        class="hero__blurred-image hero__blurred-image--desktop"
-        data-testid="hero-blurred-image-desktop"
-      >
-        {{ media_blurred }}
+  <div class="hero__outer-container">
+    <div class="hero__split-grid">
+      <div class="hero__content-col">
+        <div class="hero__card glass">
+          <div class="hero__reveal-container">
+            {% content_for 'blocks' %}
+          </div>
+        </div>
       </div>
-    {% endunless %}
-    {% if show_mobile_blurred_reflection %}
-      <div
-        class="hero__blurred-image hero__blurred-image--mobile"
-        data-testid="hero-blurred-image-mobile"
-      >
-        {{ mobile_media_blurred }}
+      <div class="hero__media-col">
+        <div class="hero__media-reveal">
+          <div class="hero__media-grid">
+            {{ media }}
+          </div>
+          {% if section.settings.toggle_overlay %}
+            <div class="hero__overlay" style="background: {{ section.settings.overlay_color }};"></div>
+          {% endif %}
+        </div>
       </div>
-    {% endif %}
-  {% endif %}
-
-  {% comment %}
-    Hardcoded to section--full-width bc the media has to be full width in all cases.
-    hero__content-wrapper applies section_width.
-  {% endcomment %}
-
-  <div
-    class="hero__container spacing-style section section--full-width"
-    style="{% render 'spacing-style', settings: section.settings %}"
-  >
-    {%- if section.settings.link != blank -%}
-      <a
-        href="{{ section.settings.link }}"
-        class="hero__link"
-        {% if section.settings.open_in_new_tab %}
-          target="_blank" rel="noopener"
-        {% endif %}
-      ></a>
-    {%- endif -%}
-    <div
-      class="hero__media-grid"
-      style="--hero-media-count: {{ media_count }};--hero-media-count-mobile: {{ media_count_mobile }};{%- if section.settings.image_1 != blank -%} --hero-media-aspect-ratio: {{ section.settings.image_1.aspect_ratio }};{% endif %}"
-      data-testid="hero-media-wrapper"
-    >
-      {% liquid
-        if section.settings.toggle_overlay
-          render 'overlay', settings: section.settings
-        endif
-      %}
-      {{ media }}
-    </div>
-    <div
-      class="
-        hero__content-wrapper
-        layout-panel-flex
-        layout-panel-flex--{{ section.settings.content_direction }}
-        {% if section.settings.vertical_on_mobile %}mobile-column{% endif %}
-        section-content-wrapper
-        {{section.settings.section_width}}
-        {% if request.design_mode %}hero__content-wrapper--design-mode{% endif %}
-      "
-      style="{% render 'layout-panel-style', settings: section.settings %}"
-    >
-      {% content_for 'blocks' %}
     </div>
   </div>
 </div>
 
 {% stylesheet %}
-  .hero-wrapper {
-    --hero-height-offset: 0px;
-  }
-
-  /* Being extra specific in the selector for performance reasons */
-  body:has(> #header-group > .header-section > #header-component) .hero-wrapper:first-child {
-    --hero-height-offset: var(--header-group-height, 0);
-  }
-
-  .hero {
+  .cinematic-hero {
     position: relative;
-    min-height: calc(var(--hero-min-height) - var(--hero-height-offset));
+    min-height: var(--hero-min-height);
+    background: var(--color-bg);
+    overflow: hidden;
   }
 
-  .hero[data-shopify-visual-preview] {
-    --hero-min-height: 600px;
-
-    min-height: 600px;
+  .hero__outer-container {
+    height: 100%;
+    width: 100%;
   }
 
-  .hero__container {
+  .hero__split-grid {
+    display: flex;
+    flex-wrap: wrap;
+    height: 100%;
+    min-height: var(--hero-min-height);
+  }
+
+  .hero__content-col {
+    flex: 1 1 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10vw 5vw;
+    z-index: 2;
+    background: var(--color-bg);
+  }
+
+  .hero__media-col {
+    flex: 1 1 50%;
     position: relative;
     overflow: hidden;
-    border: var(--hero-border-width) var(--hero-border-style) rgb(var(--color-border-rgb) / var(--hero-border-opacity));
-    min-height: inherit;
-    align-items: var(--vertical-alignment-mobile);
-    justify-content: var(--horizontal-alignment);
-    z-index: var(--layer-base);
-
-    @media screen and (min-width: 750px) {
-      align-items: var(--vertical-alignment);
-    }
+    z-index: 1;
   }
 
-  .hero__content-wrapper.page-width {
-    grid-column: 2 / 3;
+  .hero__card {
+    max-width: 50rem;
+    padding: 6rem;
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.02);
+    box-shadow: 
+      0 10px 30px -10px rgba(0,0,0,0.1),
+      inset 0 1px 1px rgba(255,255,255,0.1);
+    animation: contentReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  .hero__content-wrapper {
-    position: relative;
-    inset: 0;
-    z-index: var(--layer-flat);
-  }
-
-  .hero__content-wrapper .group-block-content {
-    position: relative;
+  .hero__media-reveal {
+    height: 100%;
+    width: 100%;
+    animation: mediaReveal 1.8s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .hero__media-grid {
+    height: 100%;
+    width: 100%;
+    transform: scale(1.1);
+    animation: imageZoom 10s ease-out forwards;
+  }
+
+  .hero__media-grid img,
+  .hero__media-grid video {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  .hero__overlay {
     position: absolute;
     inset: 0;
-    display: grid;
-    grid-column: 1 / -1;
-    grid-template-columns: repeat(var(--hero-media-count, 1), 1fr);
+    pointer-events: none;
+  }
+
+  @keyframes contentReveal {
+    from {
+      opacity: 0;
+      transform: translateX(-40px);
+      filter: blur(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+      filter: blur(0);
+    }
+  }
+
+  @keyframes mediaReveal {
+    from {
+      clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%);
+    }
+    to {
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    }
+  }
+
+  @keyframes imageZoom {
+    from { transform: scale(1.2); }
+    to { transform: scale(1); }
+  }
+
+  /* Mobile adjustments */
+  @media screen and (max-width: 749px) {
+    .hero__split-grid {
+      flex-direction: column-reverse;
+    }
+    .hero__content-col, .hero__media-col {
+      flex: 1 1 auto;
+      width: 100%;
+    }
+    .hero__media-col {
+      height: 50vh;
+    }
+    .hero__card {
+      padding: 4rem 2rem;
+      box-shadow: none;
+      background: transparent;
+      border: none;
+    }
   }
 
   .hero--auto .hero__media {
